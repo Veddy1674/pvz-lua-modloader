@@ -1,5 +1,9 @@
 local memory = require("memory")
-local defs = require("definitions")
+
+-- acts as a dependency container
+---@diagnostic disable: lowercase-global
+defs = require("definitions")
+require("utils")
 
 ---@class GameManager
 local game = {}
@@ -540,4 +544,4 @@ do
     end
 end
 
-return game, memory
+return game

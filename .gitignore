@@ -26,3 +26,4 @@ mods/core/mem.dll
 # exclude
 /*.dll
 /*.exe
+/*.txt
