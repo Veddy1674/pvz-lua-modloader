@@ -1,0 +1,28 @@
+# exclude
+/*
+
+# include
+!prismelon-dev/
+!mods/
+!.gitignore
+
+# exclude recursively
+prismelon-dev/bin/**
+prismelon-dev/obj/**
+prismelon-dev/.vs/**
+prismelon-dev/Properties/**
+prismelon-dev/commit.bat
+
+# exclude
+mods/**
+
+# include
+!mods/core/
+!mods/core/**
+
+# exclude
+mods/core/mem.dll
+
+# exclude
+/*.dll
+/*.exe
