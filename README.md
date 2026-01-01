@@ -1,4 +1,4 @@
-# Prismelon ![Prismelon](https://img.shields.io/badge/v1.0-green.svg)
+# Prismelon ![Prismelon](https://img.shields.io/badge/v1.0-green.svg) <img width="84" height="73" alt="rainbow_melonpult" src="https://github.com/user-attachments/assets/c57b8ed1-f3f3-4b31-9954-c21bdb152aa8" />
 A Lua-based user-friendly framework along with tools designed specifically for modding the classic game **Plants vs. Zombies** through memory manipulation, which is significantly easier and more versatile than manually finding and editing addresses, creating Cheat Engine scripts, or editing decompiled/remake versions of the game.  
   
   
