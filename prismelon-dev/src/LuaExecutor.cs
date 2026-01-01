@@ -256,7 +256,7 @@ exit";
 
             string wrappedCode =
 $@"-- Auto-Generated REPL Script
-local game, memory = require('core')
+local game, memory = require('gameManager'), require('memory')
 memory.start()
 
 -- User code begins

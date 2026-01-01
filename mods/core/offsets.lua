@@ -142,47 +142,49 @@ Offsets = {
 
 ---@enum Callbacks
 Callbacks = {
-    sync_profile = 0x0044a320,
-    fade_out_level = 0x0040c3e0,
-    wisdom_tree = 0x0042d1f0,
+    sync_profile = 0x44a320,
+    fade_out_level = 0x40c3e0,
+    wisdom_tree = 0x42d1f0,
 
-    put_plant = 0x0040d120,
-    put_plant_imitater = 0x00466b80,
-    put_plant_iz_style = 0x0042a530,
-    put_zombie = 0x0042a0f0,
-    put_zombie_in_row = 0x0040ddc0,
-    put_grave = 0x00426620,
-    put_ladder = 0x00408f40,
-    put_rake = 0x0040b9c0,
-    put_rake_row = 0x0040bb25,
-    put_rake_col = 0x0040ba8e,
+    put_plant = 0x40d120,
+    put_plant_imitater = 0x466b80,
+    put_plant_iz_style = 0x42a530,
+    put_zombie = 0x42a0f0, -- lawn, board, challenge - from izombie methods! but its probably the best way to forcibly spawn
+    put_zombie_in_row = 0x40ddc0, -- lawn, board, challenge
+    kill_zombie = 0x530510, -- this
+    put_grave = 0x426620, -- lawn, board, challenge?
+    put_ladder = 0x408f40,
+    put_rake = 0x40b9c0,
+    put_rake_row = 0x40bb25,
+    put_rake_col = 0x40ba8e,
 
-    start_lawn_mower = 0x00458da0,
-    delete_lawn_mower = 0x00458d10,
-    restore_lawn_mower = 0x0040bc70,
+    start_lawn_mower = 0x458da0,
+    delete_lawn_mower = 0x458d10,
+    restore_lawn_mower = 0x40bc70,
 
-    delete_plant = 0x004679b0,
-    delete_grid_item = 0x0044d000,
+    delete_plant = 0x4679b0,
+    delete_grid_item = 0x44d000,
 
-    set_plant_sleeping = 0x0045e860,
+    set_plant_sleeping = 0x45e860,
 
-    puzzle_next_stage_clear = 0x00429e50,
-    pick_background = 0x0040a160,
-    delete_particle_system = 0x005160c0,
+    puzzle_next_stage_clear = 0x429e50,
+    pick_background = 0x40a160,
+    delete_particle_system = 0x5160c0,
 
-    pick_zombie_waves = 0x004092e0,
-    remove_cutscene_zombies = 0x0040df70,
-    place_street_zombies = 0x0043a140,
+    pick_zombie_waves = 0x4092e0,
+    remove_cutscene_zombies = 0x40df70,
+    place_street_zombies = 0x43a140,
 
-    play_music = 0x0045b750,
+    play_music = 0x45b750,
 
     -- special
-    block_main_loop = {0x00552014, {0xfe}, {0xdb}},
-    unlock_sun_limit = {0x00430a23, {0xeb}, {0x7e}},
+    block_main_loop = {0x552014, {0xfe}, {0xdb}},
+    unlock_sun_limit = {0x430a23, {0xeb}, {0x7e}},
 
     -- useful for patching
     can_plant_at = 0x40E020,
-    plant_die = 0x4679B0,
+    plant_is_upgradable = 0x463470,
+    mouse_down_with_plant = 0x40FD30 -- when you click with a plant as your cursor
 }
 
 -- defs.health

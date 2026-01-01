@@ -82,6 +82,22 @@ function game._blockMainLoop(enable)
     end
 end
 
+-- Utils
+local function pixelsToRowCol(x, y)
+    -- x = 80 + 85 x X -> X = (x - 80) ÷ 85
+    -- y = 40 + 80 x Y -> Y = (y - 40) ÷ 80
+    local col = math.floor((x - 80) / 85)
+    local row = math.floor((y - 40) / 80)
+    return row, col
+end
+
+local function rowColToPixels(row, col)
+    local x = 80 + 85 * col
+    local y = 40 + 80 * row
+    return y, x
+end
+
+-- ASM-Related
 local function sleepMs(ms)
     memory.sleep(ms)
 end
@@ -303,7 +319,7 @@ do
         memory.asm_push_dword(type)
         memory.asm_mov_reg_imm(EAX, col)
 
-        -- get challenge pointer?
+        -- get Challenge*
         memory.asm_mov_dword_ptr_reg(ECX, Offsets.lawn)
         memory.asm_mov_dword_ptr_reg_add(ECX, Offsets.board)
         memory.asm_mov_dword_ptr_reg_add(ECX, Offsets.challenge)
@@ -335,6 +351,19 @@ do
         return memory.asm_code_inject()
     end
 
+    local function zombieDieNoLoot(addr)
+        memory.asm_init()
+
+        -- ECX = this (zombieAddr) __thiscall
+        memory.asm_mov_reg_imm(ECX, addr)
+
+        -- Zombie::DieNoLoot
+        memory.asm_call(Callbacks.put_zombie)
+
+        memory.asm_ret()
+        return memory.asm_code_inject()
+    end
+
     -- The X and Y start from top left to bottom right, just like plants<br>
     -- Returns the address of the zombie placed or nil
     function game.placeZombie(x, y, type)
@@ -345,13 +374,15 @@ do
 
         if isInvalidPos(x, y) or (type < 0 or type > 32) then return nil end
 
+        if (type == 25) then -- zomboss
+            return asm_place_zombie_in_row(0, 25) -- equal as game.placeZombieNaturally(0, 25)
+        end
+
+        -- workaround to return zombie addr
         local zombies_before = game.getZombies(true)
 
-        if (type == 25) then -- zomboss
-            asm_place_zombie_in_row(0, 25) -- equal as game.placeZombieNaturally(0, 25)
-        else
-            asm_place_zombie(x, y, type)
-        end
+        asm_place_zombie(x, y, type)
+
         return table.substract(game.getZombies(true), zombies_before)[1] -- get address or nil
     end
 
@@ -406,15 +437,19 @@ do
         return zombies
     end
 
-    function game.killZombie(zombie)
+    ---@param mode "instant"|"???"
+    function game.killZombie(zombie, mode)
         if not zombie then return false end
-        memory.writeByte({zombie + Offsets.zombie_dead}, 1) -- or set status to dead?
+
+        if mode == "instant" then
+            zombieDieNoLoot(zombie)
+        end -- else set status to death?
     end
 end
 
 -- GRAVES, RAKES
 do
-    function game.asm_place_grave(x, y)
+    local function asm_place_grave(x, y)
         memory.asm_init()
 
         memory.asm_mov_dword_ptr_reg(EDX, Offsets.lawn)
@@ -434,29 +469,40 @@ do
     function game.placeGrave(x, y)
         if isInvalidPos(x, y) then return nil end
 
-        return game.asm_place_grave(y, x)
+        return asm_place_grave(y, x)
     end
 end
 
 -- PROJECTILES
 do
-    function game.asm_place_projectile(x, y, row, type)
+    local function asm_add_projectile(x, y, renderOrder, row, projType)
         memory.asm_init()
-        
-        -- SOLO i push necessari
-        memory.asm_push_dword(type)
-        memory.asm_push_dword(row)
-        memory.asm_push_dword(y)
-        memory.asm_push_dword(x)
-        
-        -- base pointer (come fai in placePlant)
+
         memory.asm_mov_dword_ptr_reg(EAX, Offsets.lawn)
         memory.asm_mov_dword_ptr_reg_add(EAX, Offsets.board)
-        
-        memory.asm_call(0x0040D620)
+
+        -- "row" seems to mainly change the shadow's position, x and y are based on pixel (not row and col)
+
+        -- push inverted
+        memory.asm_push_dword(projType)
+        memory.asm_push_dword(row)
+        memory.asm_push_dword(renderOrder)
+        memory.asm_push_dword(y)
+        memory.asm_push_dword(x)
+
+        memory.asm_call(0x40D620)
+
         memory.asm_ret()
-        
-        return memory.asm_code_inject()  -- EAX avrà ProjectileObject
+        return memory.asm_code_inject() -- EAX is Projectile*
+    end
+
+    --- TODO: test further, "height" isn't clear enough
+    function game.placeProjectile(x, y, type, height, renderOrder)
+        if isInvalidPos(x, y) then return nil end
+
+        local px, py = rowColToPixels(x, y)
+        local shadow = y + (height or 0)
+        return asm_add_projectile(px, py, renderOrder or 0, shadow, type)
     end
 end
 
@@ -487,6 +533,7 @@ do
     end
 end
 
+-- other stuff
 function game._sun() -- chain of pointers
     return {Offsets.lawn, Offsets.board, Offsets.sun}
 end
@@ -530,14 +577,15 @@ do
                 return game.setSleeping(address, (bool == nil) and true or bool)
             end,
         }
-        -- # DO NOT USE THIS!
+
         t.setPosition = function(x, y)
             if isInvalidPos(x, y) then return false end
             t.x(x)
             t.y(y)
-            -- FIXME: this is not correct!
-            t.x_visual(40 + x * 80)
-            t.y_visual(80 + y * 80)
+            -- TODO: test this
+            local px, py = rowColToPixels(x, y)
+            t.x_visual(px)
+            t.y_visual(py)
             return true
         end
         return t

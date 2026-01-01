@@ -12,6 +12,8 @@
 ---@field readByte fun(addressOrTable: integer|integer[]): integer
 -- Writes a single byte to the game's memory
 ---@field writeByte fun(addressOrTable: integer|integer[], value: integer): boolean
+-- Writes an array of bytes to the game's memory
+---@field writeBytes fun(absoluteAddr: integer, bytes: integer[]): boolean
 -- Reads 2 bytes from the game's memory
 ---@field readShort fun(addressOrTable: integer|integer[]): integer
 -- Writes 2 bytes to the game's memory
@@ -107,6 +109,13 @@ local orig_stop = memory.stop
 memory.stop = function()
     memory.stopUpdate()
     return orig_stop()
+end
+
+memory.writeBytes = function(addr, bytes)
+    for i = 1, #bytes do
+        if not memory.writeByte(addr + i - 1, bytes[i]) then return false end
+    end
+    return true
 end
 
 -- events (TODO: rewise)
