@@ -5,6 +5,8 @@
 !prismelon-dev/
 !mods/
 !.gitignore
+!README.md
+!LICENSE
 
 # exclude recursively
 prismelon-dev/bin/**
