@@ -3,12 +3,23 @@
 #include <lua.hpp>
 #include <cstdint>
 #include <vector>
+#include <map> // breakpoints
 
 // defined in mem.cpp:
 extern HANDLE hProc;
 extern int memRef;
 extern lua_State* gLua; // global lua state
 extern DWORD gPid;
+
+// struct Breakpoint {
+//     DWORD address;
+//     BYTE originalByte;
+//     int luaCallbackRef;
+// };
+
+// extern std::map<DWORD, Breakpoint> gBreakpoints;
+// extern HANDLE gDebugThread;// = nullptr;
+// extern bool gDebugActive;// = false;
 
 // helpers
 DWORD getPid(const wchar_t* exeName);
@@ -69,6 +80,10 @@ int lIsPressed(lua_State* L);
 
 // key detect
 int vkFromName(const char* name);
+
+// breakpoints
+int lSetBreakpoint(lua_State* L);
+int lRemoveBreakpoint(lua_State* L);
 
 // bool readChain(const std::vector<uintptr_t>& chain, int& out);
 // int lAddEventListener(lua_State* L);

@@ -84,6 +84,10 @@ end)
 ---@field asm_ret fun()
 -- Executes the assembled code in the game's memory and returns EAX value
 ---@field asm_code_inject fun(): integer|nil
+-- Allocates new executable memory (code caves)
+---@field allocateEx fun(size: integer): integer
+-- Frees executable memory
+---@field freeEx fun(address: integer)
 -- Constants
 ---@field EAX integer 0
 ---@field ECX integer 1

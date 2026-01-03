@@ -644,6 +644,7 @@ int lStart(lua_State* L) {
 }
 
 int lStop(lua_State* L) {
+    // stop process
     if (hProc) {
         CloseHandle(hProc);
         hProc = nullptr;
@@ -795,6 +796,44 @@ int lWriteMemory(lua_State* L) {
     return 1;
 }
 
+// allocates executable memory
+int lAllocateExecutable(lua_State* L) {
+    SIZE_T size = (SIZE_T)luaL_checkinteger(L, 1); // size, usually 32, 64, 128...
+    
+    if (!hProc) {
+        lua_pushnil(L);
+        lua_pushstring(L, "Process not attached");
+        return 2;
+    }
+    
+    LPVOID addr = VirtualAllocEx(hProc, NULL, size, 
+        MEM_COMMIT | MEM_RESERVE, 
+        PAGE_EXECUTE_READWRITE
+    );
+    
+    if (!addr) {
+        lua_pushnil(L);
+        lua_pushstring(L, "VirtualAllocEx failed");
+        return 2;
+    }
+    
+    lua_pushinteger(L, (DWORD)addr);
+    return 1;
+}
+
+int lFreeMemory(lua_State* L) {
+    DWORD addr = (DWORD)luaL_checkinteger(L, 1); // address, not size
+    
+    if (!hProc) {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+    
+    BOOL ok = VirtualFreeEx(hProc, (LPVOID)addr, 0, MEM_RELEASE);
+    lua_pushboolean(L, ok);
+    return 1;
+}
+
 // module open: register functions and constants
 extern "C" __declspec(dllexport)
 
@@ -805,20 +844,21 @@ int __cdecl luaopen_mem(lua_State* L) {
         {"start", lStart}, {"stop", lStop},
         {"readMemory", lReadMemory}, {"writeMemory", lWriteMemory},
 
+        {"allocateEx", lAllocateExecutable}, {"freeEx", lFreeMemory},
+
         {"readByte", lReadByte}, {"writeByte", lWriteByte},
         {"readInt", lReadInt}, {"writeInt", lWriteInt},
-        {"readShort", lReadShort}, {"readShort", lReadShort},
+        {"readShort", lReadShort}, {"writeShort", lWriteShort},
         {"readFloat", lReadFloat}, {"writeFloat", lWriteFloat},
-
-        // events make no sense, lua is not thread safe, but an attempt was worth it
-        // {"addEventListener", lAddEventListener},
-        // {"removeEventListener", lRemoveEventListener},
-        // {"removeAllEventListeners", lRemoveAllEventListeners},
 
         {"onUpdate", lOnUpdate},
         {"stopUpdate", lStopUpdate},
 
         {"isKeyPressed", lIsPressed},
+
+        // breakpoints
+        // {"setBreakpoint", lSetBreakpoint},
+        // {"removeBreakpoint", lRemoveBreakpoint},
 
         // asm functions
         {"asm_init", lAsmInit},
