@@ -36,6 +36,7 @@ function table.contains(t, value, key)
 end
 
 function Contains(table, value) -- simplified version of table.contains
+    if table == nil or type(table) ~= "table" then return false end
     for i = 1, #table do
         if table[i] == value then
             return true
