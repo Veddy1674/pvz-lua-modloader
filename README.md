@@ -59,52 +59,6 @@ A mod/quickmod can run **Synchronously**, **Asynchronously** or **in Background*
 2. Create a .lua file inside `mods/quickmods/`
 3. Write the script (look up the examples) and execute it through `Prismelon-Dev.exe` via "`run`", (e.g: `run test.lua`), note the ".lua"
 
-### Documentation: (WIP)
-<details>
-   <summary> Event Listeners </summary>
-
-```lua
-   memory.addListener(game._sun(), function(old, new)
-      if old == nil then return end -- ignore first time
-   
-      print("Sun changed from " .. old .. " to " .. new)
-   end)
-
-   memory.onUpdate(function()
-      memory.processListeners()
-   end, 16)
-```
-</details>
-<details>
-   <summary> Using *memory.onUpdate()* </summary>
-
-```lua
-   -- sync loop
-   memory.onUpdate(function()
-      -- no worries about conflicts such as alt+tab, they're not detected!
-      if memory.isKeyPressed("tab") then
-         memory.stopUpdate() -- exits
-         return
-      end
-   end, 16) -- every 16ms (roughly 57.6 fps)
-```
-</details>
-<details>
-   <summary> Spawning plants, zombies, ladders, rakes... </summary>
-
-```lua
-   local x, y = 2, 2 -- 0-indexed! it's the third column and row
-   local isImitator = false -- self-explanatory
-   local type = defs.plants.peashooter.id -- just a more comprehensible alternative to integers (in this case 0)
-
-   local plant = game.placePlant(x, y, type, isImitator)
-   printx(plant) -- prints the address of the plant in hexadecimal
-
-   -- With zombies, ladders, rakes it's roughly the same syntax:
-   game.placeZombie(x, y, defs.zombies.buckethead_zombie)
-
-   -- TODO add rakes and ladders examples
-```
-</details>
+### [Documentation](DOCS.md)
 
 <sub>This idea was inspired by the project "[PvZ Toolkit](https://github.com/lmintlcx/pvztoolkit/)" A big thank you to the developers!  Along with whoever made the game [fandom](https://plantsvszombies.fandom.com/wiki/Modify_Plants_vs._Zombies), which helped alot with understanding how this game is traditionally modded, and how I could make it easier and possible for everyone!</sub>

@@ -6,6 +6,7 @@
 !mods/
 !.gitignore
 !README.md
+!DOCS.md
 !LICENSE
 
 # exclude recursively
