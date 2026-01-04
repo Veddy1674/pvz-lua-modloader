@@ -235,7 +235,7 @@ Zombies = {
 }
 
 ---@enum Scenes
-Scene = {
+Scenes = {
     day = 0,
     night = 1,
     pool_day = 2,
@@ -245,7 +245,7 @@ Scene = {
 }
 
 ---@class GameModes
-Gamemode = {
+Gamemodes = {
     adventure = 0,
     survival = 1,
     survival_hard = 2,

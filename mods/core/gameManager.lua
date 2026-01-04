@@ -29,7 +29,7 @@ end
 -- Returns the number of columns in the current scene (6 for pool, 5 others)
 function game.getColCount() -- (Y axis)
     local scene = game.scene()
-    return (scene == Scene.pool_day or scene == Scene.pool_night) and 6 or 5
+    return (scene == Scenes.pool_day or scene == Scenes.pool_night) and 6 or 5
 end
 
 -- Returns wheter x and y are invalid in the current scene

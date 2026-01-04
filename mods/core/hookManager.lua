@@ -4,12 +4,25 @@ local t = {
     hooks = {}
 }
 
+local function exCode(code, start, offset)
+    for _, byte in ipairs(code) do
+        memory.writeByte(start + offset, byte)
+        offset = offset + 1
+    end
+    return offset
+end
+
 -- Hooks a function and returns true if successful
 ---@param funcAddr integer
 ---@param instrSize integer >= 5
 ---@param caveSize? integer
 ---@param customCode? integer[]
-function t.installHook(funcAddr, instrSize, caveSize, customCode)
+---@param customCodeFirst? boolean -- true = custom code first, false = original code, then custom
+---@param jumpBackOffset? integer -- unstable? keep to 0
+function t.installHook(funcAddr, instrSize, caveSize, customCode, customCodeFirst, jumpBackOffset)
+    customCodeFirst = customCodeFirst or false
+    jumpBackOffset = jumpBackOffset or 0
+
     if instrSize < 5 then
         print("error: instrSize must be >= 5")
         return false
@@ -25,8 +38,8 @@ function t.installHook(funcAddr, instrSize, caveSize, customCode)
 
     -- allocate cave
     local cave = memory.allocateEx(caveSize)
-    if not cave then
-        print("error: failed to allocate memory")
+    if not cave or cave == 0 then -- (TODO: i forgot what allocateEx returns when it fails)
+        print("Error: unable to allocate memory")
         return false
     end
 
@@ -45,18 +58,33 @@ function t.installHook(funcAddr, instrSize, caveSize, customCode)
     memory.writeInt(codeStart + offset, cave)
     offset = offset + 4
 
+    local thereIsCustomCode = customCode and #customCode > 0
     -- custom code
-    if customCode then
-        for _, byte in ipairs(customCode) do
-            memory.writeByte(codeStart + offset, byte)
+    if thereIsCustomCode and customCodeFirst then
+        offset = exCode(customCode, codeStart, offset)
+    end
+
+    -- original instruction inside the cave
+    if originalBytes[0] == 0xE8 then -- relative call adjustment
+        memory.writeByte(codeStart + offset, 0xE8)
+        offset = offset + 1
+
+        local originalOffset = memory.readInt(funcAddr + 1)
+        local targetAddr = funcAddr + 5 + originalOffset
+
+        local newOffset = targetAddr - (codeStart + offset + 5)
+
+        memory.writeInt(codeStart + offset, newOffset + 1) -- "+1" because code starts at cave+1
+        offset = offset + 4
+    else
+        for i = 0, instrSize - 1 do
+            memory.writeByte(codeStart + offset, originalBytes[i])
             offset = offset + 1
         end
     end
 
-    -- original instruction
-    for i = 0, instrSize - 1 do
-        memory.writeByte(codeStart + offset, originalBytes[i])
-        offset = offset + 1
+    if thereIsCustomCode and not customCodeFirst then
+        offset = exCode(customCode, codeStart, offset)
     end
 
     -- jmp back
@@ -64,7 +92,7 @@ function t.installHook(funcAddr, instrSize, caveSize, customCode)
     local jmpOffset = retAddr - (codeStart + offset + 5)
     memory.writeByte(codeStart + offset, 0xE9)
     offset = offset + 1
-    memory.writeInt(codeStart + offset, jmpOffset)
+    memory.writeInt(codeStart + offset, jmpOffset + jumpBackOffset)
 
     -- install hook
     local hookOffset = codeStart - (funcAddr + 5)
