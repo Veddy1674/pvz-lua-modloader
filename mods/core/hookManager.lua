@@ -1,4 +1,5 @@
 local memory = require("memory")
+require("assembler")
 
 local t = {
     hooks = {}
@@ -14,27 +15,30 @@ end
 
 -- Hooks a function and returns true if successful
 ---@param funcAddr integer
----@param instrSize integer >= 5
----@param caveSize? integer
+---@param instrSize integer >= 5 (can be more than one instruction, e.g one of 2 and the next of 3), bytes > 5 are NOPed
 ---@param customCode? integer[]
 ---@param customCodeFirst? boolean -- true = custom code first, false = original code, then custom
 ---@param jumpBackOffset? integer -- unstable? keep to 0
-function t.installHook(funcAddr, instrSize, caveSize, customCode, customCodeFirst, jumpBackOffset)
+function t.installHook(funcAddr, instrSize, customCode, customCodeFirst, jumpBackOffset)
     customCodeFirst = customCodeFirst or false
     jumpBackOffset = jumpBackOffset or 0
 
     if instrSize < 5 then
-        print("error: instrSize must be >= 5")
+        error("Error: instruction(s) size must be >= 5 totally")
         return false
     end
 
-    caveSize = caveSize or 128
+    local thereIsCustomCode = customCode and #customCode > 0
 
     -- save original bytes
     local originalBytes = {}
     for i = 0, instrSize - 1 do
         originalBytes[i] = memory.readByte(funcAddr + i)
     end
+
+    -- calc cave size: counter (1) + inc instruction (7) + original size (instrSize) + jmp_back (5) + custom code + margin
+    local caveSize = 1 + 7 + instrSize + 5 + (thereIsCustomCode and #customCode or 0) + 8
+    caveSize = math.ceil(caveSize / 16) * 16 -- good practice, round up to 16 multiples of bytes
 
     -- allocate cave
     local cave = memory.allocateEx(caveSize)
@@ -58,7 +62,6 @@ function t.installHook(funcAddr, instrSize, caveSize, customCode, customCodeFirs
     memory.writeInt(codeStart + offset, cave)
     offset = offset + 4
 
-    local thereIsCustomCode = customCode and #customCode > 0
     -- custom code
     if thereIsCustomCode and customCodeFirst then
         offset = exCode(customCode, codeStart, offset)
